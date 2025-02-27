@@ -1,6 +1,8 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox
 import random
+import time
 from bub_srt import bubble
 from quick_sort import quicksort
 from merge_sort import merge_sort
@@ -8,6 +10,7 @@ from heap_sort import heapSort
 from kirkpatrick_reisch_sort import kirkpatrick_reisch_sort
 from slow_sort import slow_sort
 from bucket_sort import bucket_sort
+from bogo_sort import bogoSort
 
 # Initialize root class for Tkinter
 root = Tk()
@@ -56,6 +59,8 @@ def drawData(data, colorlist):
 def start_algorithm():
     global data, sorting
     sorting = True
+    start_time = time.time()  # Record start time
+    
     if select_alg.get() == "Bubble Sort":
         bubble(data, drawData, speedbar.get())
     elif select_alg.get() == "Quick Sort":
@@ -70,6 +75,13 @@ def start_algorithm():
         slow_sort(data, 0, len(data) - 1, drawData, speedbar.get())
     elif select_alg.get() == "Bucket Sort":
         bucket_sort(data, drawData, speedbar.get())
+    elif select_alg.get() == "Bogo Sort":
+        bogoSort(data, drawData, speedbar.get())
+
+    end_time = time.time()  # Record end time
+    sorting_time = round(end_time - start_time, 5)  # Calculate and round to 5 decimal places
+
+    messagebox.showinfo("Sorting Completed", f"Sorting took {sorting_time} seconds!")
 
 
 # Function to exit application
@@ -85,7 +97,7 @@ canvas.pack(side=TOP, pady=10, expand=True, fill=BOTH)
 
 # Algorithm selection menu
 Label(Mainframe, text="ALGORITHM", bg='Grey').grid(row=0, column=0, padx=5, pady=5, sticky=W)
-algmenu = ttk.Combobox(Mainframe, textvariable=select_alg, values=["Bubble Sort", "Quick Sort", "Merge Sort", "Heap Sort", "Kirkpatrick-Reisch Sort", "Slow Sort", "Bucket Sort"])
+algmenu = ttk.Combobox(Mainframe, textvariable=select_alg, values=["Bubble Sort", "Quick Sort", "Merge Sort", "Heap Sort", "Kirkpatrick-Reisch Sort", "Slow Sort", "Bucket Sort", "Bogo Sort"])
 algmenu.grid(row=0, column=1, padx=5, pady=5)
 algmenu.current(0)
 

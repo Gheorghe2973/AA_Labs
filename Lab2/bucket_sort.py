@@ -7,7 +7,6 @@ def bucket_sort(arr, drawData, speed):
     bucket_count = len(arr)
     min_value, max_value = min(arr), max(arr)
 
-    # Create empty buckets
     buckets = [[] for _ in range(bucket_count)]
 
     for num in arr:
@@ -25,4 +24,4 @@ def bucket_sort(arr, drawData, speed):
         time.sleep(speed)
 
     arr[:] = sorted_arr
-    drawData(arr, ['Blue' for _ in range(len(arr))])  # Final sorted state
+    drawData(arr, ['Blue' for _ in range(len(arr))]) 

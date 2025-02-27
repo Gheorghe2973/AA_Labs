@@ -1,6 +1,5 @@
 import time
 
-# Heapify function with visualization updates
 def heapify(arr, n, i, drawData, speed):
     largest = i  
     l = 2 * i + 1  
@@ -20,7 +19,6 @@ def heapify(arr, n, i, drawData, speed):
 
         heapify(arr, n, largest, drawData, speed)
 
-# Heap Sort function with visualization
 def heapSort(arr, drawData, speed):
     n = len(arr)
 
@@ -35,4 +33,4 @@ def heapSort(arr, drawData, speed):
 
         heapify(arr, i, 0, drawData, speed)
 
-    drawData(arr, ['Blue' for _ in range(len(arr))])  # Final sorted state
+    drawData(arr, ['Blue' for _ in range(len(arr))])  

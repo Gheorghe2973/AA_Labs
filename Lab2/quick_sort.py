@@ -5,7 +5,7 @@ def quicksort(data, low, high, drawData, speed):
         pi = partition(data, low, high, drawData, speed)
         quicksort(data, low, pi - 1, drawData, speed)
         quicksort(data, pi + 1, high, drawData, speed)
-        drawData(data, ['Blue' for _ in range(len(data))])  # Final sorted state
+        drawData(data, ['Blue' for _ in range(len(data))])
 
 def partition(data, low, high, drawData, speed):
     pivot = data[high]

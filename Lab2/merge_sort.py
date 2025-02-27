@@ -41,4 +41,4 @@ def merge_sort(arr, left, right, drawData, speed):
         merge_sort(arr, left, mid, drawData, speed)
         merge_sort(arr, mid + 1, right, drawData, speed)
         merge(arr, left, mid, right, drawData, speed)
-        drawData(arr, ['Blue' for _ in range(len(arr))])  # Final sorted state
+        drawData(arr, ['Blue' for _ in range(len(arr))]) 
