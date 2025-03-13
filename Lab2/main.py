@@ -11,6 +11,11 @@ from kirkpatrick_reisch_sort import kirkpatrick_reisch_sort
 from slow_sort import slow_sort
 from bucket_sort import bucket_sort
 from bogo_sort import bogoSort
+from quick_sort_opt import quicksort_optimized
+from merge_sort_opt import merge_sort_optimized
+from heap_sort_opt import heap_sort_optimized
+from bucket_sort_opt import bucket_sort_optimized
+
 
 # Initialize root class for Tkinter
 root = Tk()
@@ -20,7 +25,7 @@ root.config(bg="Grey")
 
 select_alg = StringVar()
 data = []
-sorting = False  # Variable to track sorting state
+sorting = False 
 
 # Function to generate data values
 def generate():
@@ -42,7 +47,7 @@ def drawData(data, colorlist):
     offset = 30
     spacing = 10
     
-    normalized_data = [i / max(data) for i in data]
+    normalized_data = [i / max(data) if max(data) > 0 else 1 for i in data]
     
     for i, height in enumerate(normalized_data):
         x0 = i * x_width + offset + spacing
@@ -59,29 +64,40 @@ def drawData(data, colorlist):
 def start_algorithm():
     global data, sorting
     sorting = True
+    speed = float(speedbar.get())  # Ensure speed is a float
+
     start_time = time.time()  # Record start time
-    
+
     if select_alg.get() == "Bubble Sort":
-        bubble(data, drawData, speedbar.get())
+        bubble(data, drawData, speed)
     elif select_alg.get() == "Quick Sort":
-        quicksort(data, 0, len(data) - 1, drawData, speedbar.get())
+        quicksort(data, 0, len(data) - 1, drawData, speed)
+    elif select_alg.get() == "Quick Sort Opt":
+        quicksort_optimized(data, drawData, speed)
     elif select_alg.get() == "Merge Sort":
-        merge_sort(data, 0, len(data) - 1, drawData, speedbar.get())
+        merge_sort(data, 0, len(data) - 1, drawData, speed)
+    elif select_alg.get() == "Merge Sort Opt":
+        merge_sort_optimized(data, drawData, speed)
     elif select_alg.get() == "Heap Sort":
-        heapSort(data, drawData, speedbar.get())
+        heapSort(data, drawData, speed)
+    elif select_alg.get() == "Heap Sort Opt":
+        heap_sort_optimized(data, drawData, speed)
     elif select_alg.get() == "Kirkpatrick-Reisch Sort":
-        kirkpatrick_reisch_sort(data, drawData, speedbar.get())
+        kirkpatrick_reisch_sort(data, drawData, speed)
     elif select_alg.get() == "Slow Sort":
-        slow_sort(data, 0, len(data) - 1, drawData, speedbar.get())
+        slow_sort(data, 0, len(data) - 1, drawData, speed)
     elif select_alg.get() == "Bucket Sort":
-        bucket_sort(data, drawData, speedbar.get())
+        bucket_sort(data, drawData, speed)
+    elif select_alg.get() == "Bucket Sort Opt":
+        bucket_sort_optimized(data, drawData, speed)
     elif select_alg.get() == "Bogo Sort":
-        bogoSort(data, drawData, speedbar.get())
+        bogoSort(data, drawData, speed)
 
     end_time = time.time()  # Record end time
-    sorting_time = round(end_time - start_time, 5)  # Calculate and round to 5 decimal places
+    sorting_time = round(end_time - start_time, 5)
 
     messagebox.showinfo("Sorting Completed", f"Sorting took {sorting_time} seconds!")
+
 
 
 # Function to exit application
@@ -97,7 +113,7 @@ canvas.pack(side=TOP, pady=10, expand=True, fill=BOTH)
 
 # Algorithm selection menu
 Label(Mainframe, text="ALGORITHM", bg='Grey').grid(row=0, column=0, padx=5, pady=5, sticky=W)
-algmenu = ttk.Combobox(Mainframe, textvariable=select_alg, values=["Bubble Sort", "Quick Sort", "Merge Sort", "Heap Sort", "Kirkpatrick-Reisch Sort", "Slow Sort", "Bucket Sort", "Bogo Sort"])
+algmenu = ttk.Combobox(Mainframe, textvariable=select_alg, values=["Bubble Sort", "Quick Sort","Quick Sort Opt", "Merge Sort","Merge Sort Opt", "Heap Sort","Heap Sort Opt", "Kirkpatrick-Reisch Sort", "Slow Sort", "Bucket Sort","Bucket Sort Opt", "Bogo Sort"])
 algmenu.grid(row=0, column=1, padx=5, pady=5)
 algmenu.current(0)
 
