@@ -1,217 +1,190 @@
 import time
-import random
-import networkx as nx
-import matplotlib.pyplot as plt
-from collections import deque
 import numpy as np
+import matplotlib.pyplot as plt
+import networkx as nx
+from collections import deque
+import random
 
 class Graph:
     def __init__(self, vertices):
         self.V = vertices
-        self.graph = [[] for _ in range(vertices)]
-
-    def add_edge(self, u, v):
-        self.graph[u].append(v)
-
-    def bfs(self, start_vertex):
-        visited = [False] * self.V
-        queue = deque([start_vertex])
-        visited[start_vertex] = True
-        path = []
-
-        while queue:
-            vertex = queue.popleft()
-            path.append(vertex)
-            
-            for adjacent in self.graph[vertex]:
-                if not visited[adjacent]:
-                    queue.append(adjacent)
-                    visited[adjacent] = True
-        
-        return path, visited.count(True)
-
+        self.adj = [[] for _ in range(vertices)]
+    
+    def add_edge(self, v, w):
+        self.adj[v].append(w)
+    
+    def generate_random_graph(self, edge_probability=0.2):
+        for i in range(self.V):
+            for j in range(self.V):
+                if i != j and random.random() < edge_probability:
+                    self.add_edge(i, j)
+    
     def dfs(self, start_vertex):
         visited = [False] * self.V
         path = []
+        start_time = time.time()
         
         def dfs_util(vertex):
             visited[vertex] = True
             path.append(vertex)
             
-            for adjacent in self.graph[vertex]:
-                if not visited[adjacent]:
-                    dfs_util(adjacent)
+            for neighbor in self.adj[vertex]:
+                if not visited[neighbor]:
+                    dfs_util(neighbor)
         
         dfs_util(start_vertex)
-        return path, visited.count(True)
+        end_time = time.time()
+        
+        return path, end_time - start_time
+    
+    def bfs(self, start_vertex):
+        visited = [False] * self.V
+        queue = deque([start_vertex])
+        visited[start_vertex] = True
+        path = []
+        
+        start_time = time.time()
+        
+        while queue:
+            vertex = queue.popleft()
+            path.append(vertex)
+            
+            for neighbor in self.adj[vertex]:
+                if not visited[neighbor]:
+                    visited[neighbor] = True
+                    queue.append(neighbor)
+        
+        end_time = time.time()
+        
+        return path, end_time - start_time
 
-def generate_random_graph(n, edge_probability=0.3):
-    g = Graph(n)
-    for i in range(n):
-        for j in range(n):
-            if i != j and random.random() < edge_probability:
-                g.add_edge(i, j)
-    return g
+def run_analysis(sizes):
+    dfs_times = []
+    bfs_times = []
+    dfs_vertices_visited = []
+    bfs_vertices_visited = []
+    
+    for size in sizes:
+        g = Graph(size)
+        g.generate_random_graph(edge_probability=2/size)
+        
+        dfs_path, dfs_time = g.dfs(0)
+        bfs_path, bfs_time = g.bfs(0)
+        
+        dfs_times.append(dfs_time * 1000)  
+        bfs_times.append(bfs_time * 1000)  
+        
+        dfs_vertices_visited.append(len(dfs_path))
+        bfs_vertices_visited.append(len(bfs_path))
+    
+    return dfs_times, bfs_times, dfs_vertices_visited, bfs_vertices_visited
 
-def visualize_graph(g, bfs_path=None, dfs_path=None):
+def visualize_search_algorithm(graph, path, title):
     G = nx.DiGraph()
     
-    for i in range(g.V):
-        G.add_node(i)
-        
-    for i in range(g.V):
-        for j in g.graph[i]:
-            G.add_edge(i, j)
+    for v in range(graph.V):
+        G.add_node(v)
     
-    plt.figure(figsize=(12, 10))
+    for v in range(graph.V):
+        for w in graph.adj[v]:
+            G.add_edge(v, w)
+    
     pos = nx.spring_layout(G, seed=42)
     
-    if bfs_path:
-        bfs_edges = [(bfs_path[i], bfs_path[i+1]) for i in range(len(bfs_path)-1) if (bfs_path[i], bfs_path[i+1]) in G.edges()]
-        nx.draw_networkx_edges(G, pos, edgelist=bfs_edges, edge_color='r', width=2)
+    plt.figure(figsize=(10, 6))
     
-    if dfs_path:
-        dfs_edges = [(dfs_path[i], dfs_path[i+1]) for i in range(len(dfs_path)-1) if (dfs_path[i], dfs_path[i+1]) in G.edges()]
-        nx.draw_networkx_edges(G, pos, edgelist=dfs_edges, edge_color='b', width=2)
+    edge_colors = ['black' for _ in G.edges()]
+    node_colors = ['lightblue' for _ in G.nodes()]
     
-    edge_colors = ['red' if dfs_path and edge in [(dfs_path[i], dfs_path[i+1]) for i in range(len(dfs_path)-1) if (dfs_path[i], dfs_path[i+1]) in G.edges()] 
-                  else 'blue' if bfs_path and edge in [(bfs_path[i], bfs_path[i+1]) for i in range(len(bfs_path)-1) if (bfs_path[i], bfs_path[i+1]) in G.edges()]
-                  else 'gray' for edge in G.edges()]
+    visited_edges = []
+    for i in range(len(path) - 1):
+        for j in range(i + 1, len(path)):
+            if path[j] in graph.adj[path[i]]:
+                visited_edges.append((path[i], path[j]))
+                break
     
-    nx.draw(G, pos, with_labels=True, node_color='lightblue', node_size=500, arrows=True, edge_color=edge_colors)
+    for i, (u, v) in enumerate(G.edges()):
+        if (u, v) in visited_edges:
+            edge_colors[i] = 'red'
     
-    if bfs_path and dfs_path:
-        plt.title(f"Graph with BFS path (blue) and DFS path (red)")
-    elif bfs_path:
-        plt.title("Graph with BFS path")
-    elif dfs_path:
-        plt.title("Graph with DFS path")
-    else:
-        plt.title("Random Graph")
-        
+    for i, node in enumerate(G.nodes()):
+        if node in path:
+            node_colors[i] = 'lightgreen'
+            if node == path[0]:
+                node_colors[i] = 'orange'
+    
+    nx.draw(G, pos, with_labels=True, node_color=node_colors, 
+            edge_color=edge_colors, arrows=True, node_size=500, font_size=10)
+    
+    plt.title(title)
     plt.tight_layout()
-    plt.savefig("graph_visualization.png")
+    plt.savefig(f"{title.lower().replace(' ', '_')}.png")
     plt.close()
 
 def compare_algorithms():
-    vertices_range = range(10, 501, 50)
-    bfs_times = []
-    dfs_times = []
-    bfs_coverage = []
-    dfs_coverage = []
+    sizes = [10, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+    dfs_times, bfs_times, dfs_visits, bfs_visits = run_analysis(sizes)
     
-    for v in vertices_range:
-        g = generate_random_graph(v)
-        
-        start_time = time.time()
-        _, bfs_covered = g.bfs(0)
-        bfs_time = time.time() - start_time
-        
-        start_time = time.time()
-        _, dfs_covered = g.dfs(0)
-        dfs_time = time.time() - start_time
-        
-        bfs_times.append(bfs_time)
-        dfs_times.append(dfs_time)
-        bfs_coverage.append(bfs_covered / v)
-        dfs_coverage.append(dfs_covered / v)
+    plt.figure(figsize=(14, 6))
     
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    plt.subplot(1, 2, 1)
+    plt.plot(sizes, dfs_times, 'o-', label='DFS')
+    plt.plot(sizes, bfs_times, 's-', label='BFS')
+    plt.xlabel('Number of Vertices')
+    plt.ylabel('Execution Time (ms)')
+    plt.title('Time Complexity Comparison')
+    plt.legend()
+    plt.grid(True)
     
-    ax1.plot(vertices_range, bfs_times, 'b-', label='BFS')
-    ax1.plot(vertices_range, dfs_times, 'r-', label='DFS')
-    ax1.set_xlabel('Number of Vertices')
-    ax1.set_ylabel('Execution Time (seconds)')
-    ax1.set_title('Time Complexity Comparison')
-    ax1.legend()
-    ax1.grid(True)
-    
-    ax2.plot(vertices_range, bfs_coverage, 'b-', label='BFS')
-    ax2.plot(vertices_range, dfs_coverage, 'r-', label='DFS')
-    ax2.set_xlabel('Number of Vertices')
-    ax2.set_ylabel('Coverage (fraction of vertices)')
-    ax2.set_title('Coverage Comparison')
-    ax2.legend()
-    ax2.grid(True)
+    plt.subplot(1, 2, 2)
+    plt.plot(sizes, dfs_visits, 'o-', label='DFS')
+    plt.plot(sizes, bfs_visits, 's-', label='BFS')
+    plt.xlabel('Number of Vertices')
+    plt.ylabel('Number of Vertices Visited')
+    plt.title('Vertices Visited Comparison')
+    plt.legend()
+    plt.grid(True)
     
     plt.tight_layout()
-    plt.savefig("comparison_chart.png")
+    plt.savefig("algorithm_comparison.png")
     plt.close()
-
-    return vertices_range, bfs_times, dfs_times, bfs_coverage, dfs_coverage
-
-def visualize_additional_metrics():
-    vertices_range = list(range(10, 101, 10))
-    edge_probs = [0.1, 0.3, 0.5, 0.7]
     
-    bfs_depth = []
-    dfs_depth = []
+    small_graph = Graph(8)
+    small_graph.generate_random_graph(edge_probability=0.3)
     
-    for prob in edge_probs:
-        bfs_depths = []
-        dfs_depths = []
-        
-        for v in vertices_range:
-            total_bfs_depth = 0
-            total_dfs_depth = 0
-            trials = 5
-            
-            for _ in range(trials):
-                g = generate_random_graph(v, prob)
-                
-                bfs_path, _ = g.bfs(0)
-                dfs_path, _ = g.dfs(0)
-                
-                total_bfs_depth += len(bfs_path)
-                total_dfs_depth += len(dfs_path)
-            
-            bfs_depths.append(total_bfs_depth / trials)
-            dfs_depths.append(total_dfs_depth / trials)
-        
-        bfs_depth.append(bfs_depths)
-        dfs_depth.append(dfs_depths)
+    dfs_path, _ = small_graph.dfs(0)
+    bfs_path, _ = small_graph.bfs(0)
     
-    plt.figure(figsize=(12, 10))
+    visualize_search_algorithm(small_graph, dfs_path, "DFS Traversal")
+    visualize_search_algorithm(small_graph, bfs_path, "BFS Traversal")
     
-    for i, prob in enumerate(edge_probs):
-        plt.subplot(2, 2, i+1)
-        plt.plot(vertices_range, bfs_depth[i], 'b-', label='BFS')
-        plt.plot(vertices_range, dfs_depth[i], 'r-', label='DFS')
-        plt.xlabel('Number of Vertices')
-        plt.ylabel('Average Path Length')
-        plt.title(f'Path Length (Edge Probability = {prob})')
-        plt.legend()
-        plt.grid(True)
-    
-    plt.tight_layout()
-    plt.savefig("path_length_comparison.png")
-    plt.close()
+    return dfs_times, bfs_times, dfs_visits, bfs_visits, sizes
 
 def main():
-    small_graph_size = 10
-    g = generate_random_graph(small_graph_size, 0.3)
+    dfs_times, bfs_times, dfs_visits, bfs_visits, sizes = compare_algorithms()
     
-    start_vertex = 0
-    bfs_path, _ = g.bfs(start_vertex)
-    dfs_path, _ = g.dfs(start_vertex)
+    print("Depth-First Search (DFS) vs Breadth-First Search (BFS) Analysis")
+    print("\nGraph Sizes:", sizes)
+    print("\nDFS Execution Times (ms):", [round(t, 4) for t in dfs_times])
+    print("BFS Execution Times (ms):", [round(t, 4) for t in bfs_times])
     
-    print(f"BFS Path: {bfs_path}")
-    print(f"DFS Path: {dfs_path}")
+    print("\nDFS Vertices Visited:", dfs_visits)
+    print("BFS Vertices Visited:", bfs_visits)
     
-    visualize_graph(g, bfs_path, dfs_path)
+    print("\nConclusion:")
+    avg_dfs_time = sum(dfs_times) / len(dfs_times)
+    avg_bfs_time = sum(bfs_times) / len(bfs_times)
     
-    vertices_range, bfs_times, dfs_times, bfs_coverage, dfs_coverage = compare_algorithms()
+    if avg_dfs_time < avg_bfs_time:
+        print(f"DFS was faster on average by {round((avg_bfs_time - avg_dfs_time), 4)} ms")
+    else:
+        print(f"BFS was faster on average by {round((avg_dfs_time - avg_bfs_time), 4)} ms")
     
-    print("\nPerformance Comparison:")
-    print("Vertices | BFS Time | DFS Time | BFS Coverage | DFS Coverage")
-    print("-" * 65)
+    for i, size in enumerate(sizes):
+        if dfs_visits[i] != bfs_visits[i]:
+            print(f"For graph size {size}, DFS visited {dfs_visits[i]} vertices while BFS visited {bfs_visits[i]} vertices")
     
-    for i, v in enumerate(vertices_range):
-        print(f"{v:8d} | {bfs_times[i]:.6f} | {dfs_times[i]:.6f} | {bfs_coverage[i]:.4f} | {dfs_coverage[i]:.4f}")
-    
-    visualize_additional_metrics()
-    
-    print("\nAnalysis complete. Check the generated visualization files.")
+    print("\nVisualizations have been saved as 'dfs_traversal.png', 'bfs_traversal.png', and 'algorithm_comparison.png'")
 
 if __name__ == "__main__":
     main()
